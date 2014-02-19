@@ -1,5 +1,7 @@
 class rancid_git {
 
+  Package { ensure => "installed" }
+
   user { 'rancid':
     name   => 'rancid',
     ensure => present,
@@ -56,8 +58,6 @@ class rancid_git {
     ],
   }
 
-  Package { ensure => "installed" }
-
   $enhancers = [ "expect", "git", "telnet", "exim4" ]
 
   package { $enhancers: }
@@ -75,7 +75,4 @@ class rancid_git {
     minute  => 0,
     require => User['rancid'],
   }
-
-  # add a cron for rancid-git
-  # check everything belongs to user rancid
 }
