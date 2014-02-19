@@ -1,0 +1,7 @@
+# Here you have to define the way clogin/jlogin and rancid have to access
+# devices. Replace * by an ip address or a fqdn to target just one device.
+# add noenable is useful for some Juniper devices.
+#add method * {ssh}
+#add user * {user}
+#add password * {mypasswd}
+#add noenable * 1
