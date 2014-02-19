@@ -10,15 +10,17 @@ class rancid_git {
   file { '/usr/lib/rancid/bin/control_rancid':
     path   => '/usr/lib/rancid/bin/control_rancid',
     ensure => present,
-    owner  => 'rancid',
+    owner  => 'root',
     source => 'puppet:///modules/rancid_git/control_rancid.PATCHED',
+    mode   => 0755,
   }
 
   file { '/usr/lib/rancid/bin/jlogin':
     path   => '/usr/lib/rancid/bin/jlogin',
     ensure => present,
-    owner  => 'rancid',
+    owner  => 'root',
     source => 'puppet:///modules/rancid_git/jlogin.PATCHED',
+    mode   => 0755,
   }
 
   file { '/var/lib/rancid/.cloginrc':
