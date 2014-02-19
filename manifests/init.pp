@@ -1,18 +1,25 @@
 class rancid_git {
 
-  file { '/etc/rancid/rancid.conf':
-    path   => '/etc/rancid/rancid.conf',
+  user { 'rancid':
+    name   => 'rancid',
     ensure => present,
-    owner  => 'rancid',
-    source => 'puppet:///modules/rancid_git/rancid.conf',
+    home   => '/var/lib/rancid',
+    shell  => '/bin/bash',
+  }
+
+  file { '/etc/rancid/rancid.conf':
+    path    => '/etc/rancid/rancid.conf',
+    ensure  => present,
+    owner   => 'root',
+    source  => 'puppet:///modules/rancid_git/rancid.conf',
   }
 
   file { '/usr/lib/rancid/bin/control_rancid':
-    path   => '/usr/lib/rancid/bin/control_rancid',
-    ensure => present,
-    owner  => 'root',
-    source => 'puppet:///modules/rancid_git/control_rancid.PATCHED',
-    mode   => 0755,
+    path    => '/usr/lib/rancid/bin/control_rancid',
+    ensure  => present,
+    owner   => 'root',
+    source  => 'puppet:///modules/rancid_git/control_rancid.PATCHED',
+    mode    => 0755,
   }
 
   file { '/usr/lib/rancid/bin/jlogin':
@@ -24,11 +31,12 @@ class rancid_git {
   }
 
   file { '/var/lib/rancid/.cloginrc':
-    path   => '/var/lib/rancid/bin/.cloginrc',
-    ensure => present,
-    mode   => 0600,
-    owner  => 'rancid',
-    source => 'puppet:///modules/rancid_git/cloginrc.SAMPLE',
+    path    => '/var/lib/rancid/.cloginrc',
+    ensure  => present,
+    mode    => 0600,
+    owner   => 'rancid',
+    source  => 'puppet:///modules/rancid_git/cloginrc.SAMPLE',
+    require => User['rancid'],
   }
 
   $debpath = '/var/tmp/rancid-git_2.3.8-1_amd64.deb'
@@ -58,6 +66,14 @@ class rancid_git {
     path    => "$debpath",
     ensure  => present,
     source  => 'puppet:///modules/rancid_git/rancid-git_2.3.8-1_amd64.deb',
+  }
+
+  cron { 'rancid-git':
+    command => '/usr/lib/rancid/bin/rancid-run',
+    user    => 'rancid',
+    hour    => 3,
+    minute  => 0,
+    require => User['rancid'],
   }
 
   # add a cron for rancid-git
