@@ -1,13 +1,17 @@
-include stdlib
+class rancid_git (
+) {
+  $module_path = 'puppet:///modules/rancid_git/',
+  $bin_path = '/usr/lib/rancid/bin/',
+  $etc_path = '/etc/rancid/',
+  $home_path = '/var/lib/rancid/',
+  $deb_file = 'rancid-git_2.3.8-1_amd64.deb',
+  $deb_path = "/var/tmp/${deb_file}",
+  $rancidconf_path = "${etc_path}rancid.conf",
+  $controlrancid_path = "${bin_path}control_rancid",
+  $jlogin_path = "${bin_path}jlogin",
+  $cloginrc_path = "${home_path}.cloginrc"
 
-class rancid_git {
-
-  $module_path = 'puppet:///modules/rancid_git/'
-  $bin_path = '/usr/lib/rancid/bin/'
-  $etc_path = '/etc/rancid/'
-  $home_path = '/var/lib/rancid/'
-
-  Package { ensure => "installed" }
+  include stdlib
 
   user { 'rancid':
     name   => 'rancid',
@@ -16,60 +20,56 @@ class rancid_git {
     shell  => '/bin/bash',
   }
 
+  File { ensure => file }
+
   $files = {
-    "${etc_path}rancid.conf" => {
+    "${rancidconf_path}" => {
       'path' => "${etc_path}rancid.conf" ,
       'source' => "${module_path}rancid.conf",
       'owner' => 'root',
     },
-    "${bin_path}control_rancid" => {
+    "${controlrancid_path}" => {
       'path' => "${bin_path}control_rancid",
       'source' => "${module_path}control_rancid.PATCHED",
       'mode' => 0755
     },
-    "${bin_path}jlogin" => {
+    "${jlogin_path}" => {
       'source' => "${module_path}jlogin.PATCHED",
       'path' => "${bin_path}jlogin",
       'mode' => 0755
     },
-    "${home_path}.cloginrc" => {
+    "${cloginrc_path}" => {
       'source' => "${module_path}cloginrc.SAMPLE",
       'path' => "${home_path}.cloginrc",
       'mode' => 0600,
       'owner' => 'rancid',
-      'require' => User['rancid'],
     },
+    "${deb_path}" => {
+      path => "${deb_path}",
+      source => "${module_path}${deb_file}"
+    }
   }
 
   create_resources(file,$files)
 
-  #User['rancid'] -> File["${home_path}.cloginrc"]
-
-  $debpath = '/var/tmp/rancid-git_2.3.8-1_amd64.deb'
+  User['rancid'] -> File["${cloginrc_path}"]
 
   package { 'rancid-git':
     name        => 'rancid-git',
     ensure      => installed,
-    source      => "$debpath",
+    source      => "${deb_path}",
     provider    => 'dpkg',
     before      => [
-      File['/etc/rancid/rancid.conf'], File['/usr/lib/rancid/bin/control_rancid'],
-      File['/usr/lib/rancid/bin/jlogin'], File['/var/lib/rancid/.cloginrc']
+      File["${cloginrc_path}"], File["${controlrancid_path}"],
+      File["${jlogin_path}"], File["${rancidconf_path}"]
     ],
     require => [
-      File["$debpath"], Package['expect'], Package['git'], Package['telnet'],
-      Package['exim4']
+      File["${deb_path}"], Package['expect', 'git', 'telnet', 'exim4']
     ],
   }
 
-  $enhancers = [ "expect", "git", "telnet", "exim4" ]
-
-  package { $enhancers: }
-
-  file { "$debpath":
-    path    => "$debpath",
-    ensure  => present,
-    source  => 'puppet:///modules/rancid_git/rancid-git_2.3.8-1_amd64.deb',
+  package { ['expect', 'git', 'telnet', 'exim4']:
+    ensure => installed,
   }
 
   cron { 'rancid-git':
