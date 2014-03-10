@@ -1,4 +1,11 @@
+include stdlib
+
 class rancid_git {
+
+  $module_path = 'puppet:///modules/rancid_git/'
+  $bin_path = '/usr/lib/rancid/bin/'
+  $etc_path = '/etc/rancid/'
+  $home_path = '/var/lib/rancid/'
 
   Package { ensure => "installed" }
 
@@ -9,37 +16,34 @@ class rancid_git {
     shell  => '/bin/bash',
   }
 
-  file { '/etc/rancid/rancid.conf':
-    path    => '/etc/rancid/rancid.conf',
-    ensure  => present,
-    owner   => 'root',
-    source  => 'puppet:///modules/rancid_git/rancid.conf',
+  $files = {
+    "${etc_path}rancid.conf" => {
+      'path' => "${etc_path}rancid.conf" ,
+      'source' => "${module_path}rancid.conf",
+      'owner' => 'root',
+    },
+    "${bin_path}control_rancid" => {
+      'path' => "${bin_path}control_rancid",
+      'source' => "${module_path}control_rancid.PATCHED",
+      'mode' => 0755
+    },
+    "${bin_path}jlogin" => {
+      'source' => "${module_path}jlogin.PATCHED",
+      'path' => "${bin_path}jlogin",
+      'mode' => 0755
+    },
+    "${home_path}.cloginrc" => {
+      'source' => "${module_path}cloginrc.SAMPLE",
+      'path' => "${home_path}.cloginrc",
+      'mode' => 0600,
+      'owner' => 'rancid',
+      'require' => User['rancid'],
+    },
   }
 
-  file { '/usr/lib/rancid/bin/control_rancid':
-    path    => '/usr/lib/rancid/bin/control_rancid',
-    ensure  => present,
-    owner   => 'root',
-    source  => 'puppet:///modules/rancid_git/control_rancid.PATCHED',
-    mode    => 0755,
-  }
+  create_resources(file,$files)
 
-  file { '/usr/lib/rancid/bin/jlogin':
-    path   => '/usr/lib/rancid/bin/jlogin',
-    ensure => present,
-    owner  => 'root',
-    source => 'puppet:///modules/rancid_git/jlogin.PATCHED',
-    mode   => 0755,
-  }
-
-  file { '/var/lib/rancid/.cloginrc':
-    path    => '/var/lib/rancid/.cloginrc',
-    ensure  => present,
-    mode    => 0600,
-    owner   => 'rancid',
-    source  => 'puppet:///modules/rancid_git/cloginrc.SAMPLE',
-    require => User['rancid'],
-  }
+  #User['rancid'] -> File["${home_path}.cloginrc"]
 
   $debpath = '/var/tmp/rancid-git_2.3.8-1_amd64.deb'
 
@@ -54,7 +58,7 @@ class rancid_git {
     ],
     require => [
       File["$debpath"], Package['expect'], Package['git'], Package['telnet'],
-      Package ['exim4']
+      Package['exim4']
     ],
   }
 
